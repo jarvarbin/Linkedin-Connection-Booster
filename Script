@@ -1,0 +1,74 @@
+async function moreConnectionsPlease() {
+  const LIMIT = 5;
+  const SCROLL_TIMEOUT = 600;
+  const BULK_SCROLL_COUNT = 5;
+  const CLICK_DELAY = 300;
+  const MINIMUM_CONNECTS_TO_CLICK = 2;
+  const MINIMUM_CONNECTS_TO_SCROLL = 2;
+
+  var connects = 0;
+  var fails = 0;
+
+  function selectButtonElements() {
+    return [...document.querySelectorAll("button span")].filter(a =>
+      a.textContent.includes("Conectar")
+    );
+  }
+
+  async function singleScroll() {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        window.scrollTo(0, document.body.scrollHeight);
+        console.log("scroll!");
+        resolve();
+      }, SCROLL_TIMEOUT);
+    });
+  }
+
+  async function singleClick(elem) {
+    return new Promise(resolve => {
+      setTimeout(() => {
+        elem.click();
+        resolve();
+      }, CLICK_DELAY);
+    });
+  }
+
+  // scroll to the bottom of the page several times
+  async function bulkScroll() {
+    for (let i = 0; i < BULK_SCROLL_COUNT; i++) {
+      await singleScroll();
+    }
+  }
+
+  async function bulkClick() {
+    let elements = selectButtonElements();
+    console.log("elements length:", elements.length);
+    for (let i = 0; i < elements.length - MINIMUM_CONNECTS_TO_SCROLL; i++) {
+      try {
+        await singleClick(elements[i]);
+        console.log("click!");
+        connects++;
+      } catch (err) {
+        fails++;
+      }
+    }
+  }
+
+  function isManyConnects(amount) {
+    return selectButtonElements().length >= amount;
+  }
+
+  do {
+    if (isManyConnects(MINIMUM_CONNECTS_TO_CLICK)) {
+      console.log("Hay un montón de conexiones disponibles, hora de hacer clic...");
+      await bulkClick();
+    } else {
+      console.log("Fuera de rango, realizando scroll);
+      await bulkScroll();
+    }
+    console.log(`Conexiones establecidas:${connects} clicks fallidos :${fails}`);
+  } while (connects < LIMIT);
+}
+
+moreConnectionsPlease();
